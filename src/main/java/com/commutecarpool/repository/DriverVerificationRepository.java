@@ -26,6 +26,6 @@ public interface DriverVerificationRepository extends JpaRepository<DriverVerifi
 
     boolean existsByDriverIdAndStatus(Long driverId, VerificationStatus status);
 
-    @Query("SELECT COUNT(v) > 0 FROM DriverVerification v WHERE v.driverId = :driverId AND v.status = 'APPROVED'")
+    @Query("SELECT EXISTS (SELECT 1 FROM DriverVerification v WHERE v.driverId = :driverId AND v.status = 'APPROVED' AND v.id = (SELECT MAX(v2.id) FROM DriverVerification v2 WHERE v2.driverId = :driverId))")
     boolean isDriverVerified(@Param("driverId") Long driverId);
 }

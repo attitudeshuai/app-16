@@ -108,12 +108,14 @@ public class DriverVerificationService {
         );
         verification.addLog(log);
 
+        User driver = userRepository.findById(verification.getDriverId())
+                .orElseThrow(() -> new BusinessException(404, "用户不存在"));
         if (newStatus == VerificationStatus.APPROVED) {
-            User driver = userRepository.findById(verification.getDriverId())
-                    .orElseThrow(() -> new BusinessException(404, "用户不存在"));
             driver.setRealNameVerified(true);
-            userRepository.save(driver);
+        } else if (newStatus == VerificationStatus.REJECTED) {
+            driver.setRealNameVerified(false);
         }
+        userRepository.save(driver);
 
         verificationRepository.save(verification);
 
