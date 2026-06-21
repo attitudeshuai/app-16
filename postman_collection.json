@@ -1,0 +1,658 @@
+{
+	"info": {
+		"_postman_id": "commutecarpool-api-collection",
+		"name": "CommuteCarpool API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8086",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"testuser\",\n\t\"email\": \"test@example.com\",\n\t\"password\": \"password123\"\n}"
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.data && res.data.token) {",
+									"    pm.collectionVariables.set('token', res.data.token);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"username\": \"zhangsan\",\n\t\"password\": \"password123\"\n}"
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.collectionVariables.set('token', pm.response.json().data.token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "me"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Me",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "me"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"new@example.com\"\n}"
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Routes",
+			"item": [
+				{
+					"name": "List Routes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/routes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "routes"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Route",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/routes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "routes"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"startLocation\": \"望京\",\n\t\"endLocation\": \"中关村\",\n\t\"startTime\": \"08:00\",\n\t\"returnTime\": \"18:00\",\n\t\"daysOfWeek\": \"MON,TUE,WED,THU,FRI\",\n\t\"seats\": 4,\n\t\"pricePerSeat\": 15.00\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Routes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/routes/mine",
+							"host": ["{{base_url}}"],
+							"path": ["api", "routes", "mine"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Route",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/routes/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "routes", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Route",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/routes/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "routes", "1"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"startLocation\": \"望京SOHO\",\n\t\"endLocation\": \"中关村软件园\",\n\t\"startTime\": \"08:00\",\n\t\"returnTime\": \"18:00\",\n\t\"daysOfWeek\": \"MON,TUE,WED,THU,FRI\",\n\t\"seats\": 3,\n\t\"pricePerSeat\": 15.00\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Route",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/routes/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "routes", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Carpools",
+			"item": [
+				{
+					"name": "List Carpools",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/carpools",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpools"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Carpool",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpools",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpools"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"routeId\": 1,\n\t\"driverId\": 1,\n\t\"tripDate\": \"2026-06-16\",\n\t\"availableSeats\": 4,\n\t\"note\": \"准时发车\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Carpool",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpools/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpools", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Carpool",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpools/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpools", "1"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"routeId\": 1,\n\t\"driverId\": 1,\n\t\"tripDate\": \"2026-06-16\",\n\t\"availableSeats\": 3,\n\t\"note\": \"还有3个座位\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Carpool Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpools/1/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpools", "1", "status"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"status\": \"FULL\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Carpool",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpools/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpools", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Bookings",
+			"item": [
+				{
+					"name": "List Bookings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolbookings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolbookings"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolbookings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolbookings"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"carpoolId\": 1,\n\t\"seatsBooked\": 1\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Booking",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolbookings/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolbookings", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booking Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolbookings/1/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolbookings", "1", "status"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"status\": \"CONFIRMED\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Booking",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolbookings/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolbookings", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ratings",
+			"item": [
+				{
+					"name": "List Ratings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolratings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolratings"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Rating",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolratings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolratings"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"carpoolId\": 1,\n\t\"revieweeId\": 1,\n\t\"rating\": 5,\n\t\"comment\": \"非常准时\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rating",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolratings/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolratings", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Rating",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolratings/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolratings", "1"]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"carpoolId\": 1,\n\t\"revieweeId\": 1,\n\t\"rating\": 4,\n\t\"comment\": \"准时\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Rating",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/carpoolratings/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "carpoolratings", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Statistics",
+			"item": [
+				{
+					"name": "Overview",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/stats/overview",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stats", "overview"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trend",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/stats/trend?startDate=2026-06-01&endDate=2026-06-30",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stats", "trend"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-06-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-06-30"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

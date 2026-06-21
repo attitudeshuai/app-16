@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: commutecarpool_app
+    ports:
+      - "8086:8086"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=commutecarpool
+      - DB_USER=app_user
+      - DB_PASSWORD=app_pass
+      - JWT_SECRET=commutecarpool_jwt_secret_key_2024
+      - JWT_EXPIRATION=86400000
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    container_name: commutecarpool_mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_pass
+      - MYSQL_DATABASE=commutecarpool
+      - MYSQL_USER=app_user
+      - MYSQL_PASSWORD=app_pass
+    ports:
+      - "13311:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+volumes:
+  mysql_data:
