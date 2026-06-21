@@ -35,8 +35,8 @@ public class AuthService {
         user.setEmail(req.getEmail());
         user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
         userRepository.save(user);
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
-        return new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail());
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole().name());
+        return new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail(), user.getRole().name(), user.getRealNameVerified());
     }
 
     public AuthResponse login(LoginRequest req) {
@@ -45,8 +45,8 @@ public class AuthService {
         if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash())) {
             throw new BusinessException(401, "密码错误");
         }
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
-        return new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail());
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole().name());
+        return new AuthResponse(token, user.getId(), user.getUsername(), user.getEmail(), user.getRole().name(), user.getRealNameVerified());
     }
 
     public UserResponse getCurrentUser() {
@@ -55,6 +55,7 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(404, "用户不存在"));
         UserResponse response = new UserResponse();
         BeanUtils.copyProperties(user, response);
+        response.setRole(user.getRole().name());
         return response;
     }
 
@@ -74,6 +75,7 @@ public class AuthService {
         userRepository.save(user);
         UserResponse response = new UserResponse();
         BeanUtils.copyProperties(user, response);
+        response.setRole(user.getRole().name());
         return response;
     }
 }

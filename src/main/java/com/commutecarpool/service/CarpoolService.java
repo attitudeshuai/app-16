@@ -9,6 +9,7 @@ import com.commutecarpool.entity.CarpoolStatus;
 import com.commutecarpool.entity.Route;
 import com.commutecarpool.exception.BusinessException;
 import com.commutecarpool.repository.CarpoolRepository;
+import com.commutecarpool.repository.DriverVerificationRepository;
 import com.commutecarpool.repository.RouteRepository;
 import com.commutecarpool.security.SecurityUtils;
 import com.commutecarpool.util.PageUtils;
@@ -28,6 +29,7 @@ public class CarpoolService {
 
     private final CarpoolRepository carpoolRepository;
     private final RouteRepository routeRepository;
+    private final DriverVerificationRepository verificationRepository;
 
     public PageResponse<CarpoolResponse> listCarpools(CarpoolStatus status, LocalDate startDate, LocalDate endDate, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
@@ -53,6 +55,9 @@ public class CarpoolService {
         if (!route.getOwnerId().equals(req.getDriverId())) {
             throw new BusinessException(403, "无权操作");
         }
+        if (!verificationRepository.isDriverVerified(req.getDriverId())) {
+            throw new BusinessException(403, "请先完成实名认证后再创建行程");
+        }
         Carpool carpool = new Carpool();
         BeanUtils.copyProperties(req, carpool);
         carpoolRepository.save(carpool);
@@ -66,10 +71,14 @@ public class CarpoolService {
     }
 
     public CarpoolResponse updateCarpool(Long id, CarpoolRequest req) {
+        Long userId = SecurityUtils.getCurrentUserId();
         Carpool carpool = carpoolRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "拼车不存在"));
-        if (!carpool.getDriverId().equals(SecurityUtils.getCurrentUserId())) {
+        if (!carpool.getDriverId().equals(userId)) {
             throw new BusinessException(403, "无权操作");
+        }
+        if (!verificationRepository.isDriverVerified(userId)) {
+            throw new BusinessException(403, "请先完成实名认证后再修改行程");
         }
         BeanUtils.copyProperties(req, carpool);
         carpool.setId(id);

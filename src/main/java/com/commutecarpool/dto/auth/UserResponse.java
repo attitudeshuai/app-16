@@ -15,5 +15,7 @@ public class UserResponse {
     private String username;
     private String email;
     private String avatar;
+    private String role;
+    private Boolean realNameVerified;
     private LocalDateTime createdAt;
 }
