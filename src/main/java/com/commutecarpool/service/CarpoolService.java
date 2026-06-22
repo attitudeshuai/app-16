@@ -4,6 +4,7 @@ import com.commutecarpool.dto.PageResponse;
 import com.commutecarpool.dto.carpool.CarpoolRequest;
 import com.commutecarpool.dto.carpool.CarpoolResponse;
 import com.commutecarpool.dto.carpool.CarpoolStatusRequest;
+import com.commutecarpool.dto.pricing.SuggestedPriceResponse;
 import com.commutecarpool.entity.Carpool;
 import com.commutecarpool.entity.CarpoolStatus;
 import com.commutecarpool.entity.Route;
@@ -18,8 +19,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +33,7 @@ public class CarpoolService {
     private final CarpoolRepository carpoolRepository;
     private final RouteRepository routeRepository;
     private final DriverVerificationRepository verificationRepository;
+    private final PricingService pricingService;
 
     public PageResponse<CarpoolResponse> listCarpools(CarpoolStatus status, LocalDate startDate, LocalDate endDate, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
@@ -49,6 +53,11 @@ public class CarpoolService {
         return PageUtils.toPageResponse(carpoolPage, content);
     }
 
+    public SuggestedPriceResponse previewSuggestedPrice(Long routeId, LocalDate tripDate, LocalTime tripTime, Integer availableSeats) {
+        return pricingService.calculateSuggestedPrice(routeId, tripDate, tripTime, availableSeats);
+    }
+
+    @Transactional
     public CarpoolResponse createCarpool(CarpoolRequest req) {
         Route route = routeRepository.findById(req.getRouteId())
                 .orElseThrow(() -> new BusinessException(404, "路线不存在"));
@@ -60,6 +69,9 @@ public class CarpoolService {
         }
         Carpool carpool = new Carpool();
         BeanUtils.copyProperties(req, carpool);
+
+        pricingService.ensureCarpoolPricing(carpool, route);
+
         carpoolRepository.save(carpool);
         return toResponse(carpool);
     }
@@ -70,6 +82,7 @@ public class CarpoolService {
         return toResponse(carpool);
     }
 
+    @Transactional
     public CarpoolResponse updateCarpool(Long id, CarpoolRequest req) {
         Long userId = SecurityUtils.getCurrentUserId();
         Carpool carpool = carpoolRepository.findById(id)
@@ -80,8 +93,25 @@ public class CarpoolService {
         if (!verificationRepository.isDriverVerified(userId)) {
             throw new BusinessException(403, "请先完成实名认证后再修改行程");
         }
+
+        Route route = routeRepository.findById(req.getRouteId())
+                .orElseThrow(() -> new BusinessException(404, "路线不存在"));
+
         BeanUtils.copyProperties(req, carpool);
         carpool.setId(id);
+
+        if (req.getFinalPricePerSeat() != null) {
+            SuggestedPriceResponse suggested = pricingService.calculateSuggestedPrice(
+                    route.getId(),
+                    carpool.getTripDate(),
+                    parseTime(route.getStartTime()),
+                    carpool.getAvailableSeats()
+            );
+            pricingService.validatePriceWithinRange(req.getFinalPricePerSeat(), suggested.getSuggestedPrice());
+            carpool.setSuggestedPricePerSeat(suggested.getSuggestedPrice());
+            carpool.setFinalPricePerSeat(req.getFinalPricePerSeat());
+        }
+
         carpoolRepository.save(carpool);
         return toResponse(carpool);
     }
@@ -123,6 +153,17 @@ public class CarpoolService {
             return target == CarpoolStatus.OPEN || target == CarpoolStatus.COMPLETED || target == CarpoolStatus.CANCELLED;
         }
         return false;
+    }
+
+    private LocalTime parseTime(String timeStr) {
+        if (timeStr == null || timeStr.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalTime.parse(timeStr);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private CarpoolResponse toResponse(Carpool carpool) {

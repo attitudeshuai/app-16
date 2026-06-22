@@ -5,6 +5,7 @@ import com.commutecarpool.dto.PageResponse;
 import com.commutecarpool.dto.carpool.CarpoolRequest;
 import com.commutecarpool.dto.carpool.CarpoolResponse;
 import com.commutecarpool.dto.carpool.CarpoolStatusRequest;
+import com.commutecarpool.dto.pricing.SuggestedPriceResponse;
 import com.commutecarpool.entity.CarpoolStatus;
 import com.commutecarpool.service.CarpoolService;
 import jakarta.validation.Valid;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @RestController
 @RequestMapping("/api/carpools")
@@ -39,6 +41,15 @@ public class CarpoolController {
             @RequestParam(defaultValue = "10") int size) {
         CarpoolStatus statusEnum = status != null ? CarpoolStatus.valueOf(status) : null;
         return ApiResponse.success(carpoolService.listCarpools(statusEnum, startDate, endDate, page, size));
+    }
+
+    @GetMapping("/suggested-price")
+    public ApiResponse<SuggestedPriceResponse> previewSuggestedPrice(
+            @RequestParam Long routeId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tripDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime tripTime,
+            @RequestParam(defaultValue = "3") Integer availableSeats) {
+        return ApiResponse.success(carpoolService.previewSuggestedPrice(routeId, tripDate, tripTime, availableSeats));
     }
 
     @PostMapping

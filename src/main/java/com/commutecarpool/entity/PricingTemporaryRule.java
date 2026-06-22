@@ -13,48 +13,47 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "routes")
-public class Route {
+@Table(name = "pricing_temporary_rules")
+public class PricingTemporaryRule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "owner_id")
-    private Long ownerId;
+    @Column(nullable = false, length = 200)
+    private String name;
 
-    @Column(nullable = false, name = "start_location")
-    private String startLocation;
+    @Column(length = 500)
+    private String description;
 
-    @Column(nullable = false, name = "end_location")
-    private String endLocation;
+    @Column(nullable = false, name = "start_date")
+    private LocalDate startDate;
+
+    @Column(nullable = false, name = "end_date")
+    private LocalDate endDate;
 
     @Column(name = "start_time")
-    private String startTime;
+    private LocalTime startTime;
 
-    @Column(name = "return_time")
-    private String returnTime;
+    @Column(name = "end_time")
+    private LocalTime endTime;
 
-    @Column(name = "days_of_week")
-    private String daysOfWeek;
-
-    @Column(nullable = false)
-    private Integer seats;
-
-    @Column(name = "price_per_seat")
-    private BigDecimal pricePerSeat;
-
-    @Column(name = "average_distance_km", precision = 10, scale = 2)
-    private BigDecimal averageDistanceKm;
+    @Column(nullable = false, precision = 5, scale = 2)
+    private BigDecimal multiplier;
 
     @Column(nullable = false)
     private Boolean isActive = true;
+
+    @Column(nullable = false)
+    private Integer priority = 0;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

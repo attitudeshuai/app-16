@@ -5,6 +5,8 @@ import com.commutecarpool.entity.CarpoolStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,4 +28,18 @@ public interface CarpoolRepository extends JpaRepository<Carpool, Long> {
     Page<Carpool> findByStatusAndTripDateBetween(CarpoolStatus status, LocalDate start, LocalDate end, Pageable pageable);
 
     long countByTripDate(LocalDate tripDate);
+
+    @Query("SELECT COUNT(c) FROM Carpool c WHERE c.routeId = :routeId " +
+            "AND c.tripDate BETWEEN :startDate AND :endDate " +
+            "AND c.status IN (com.commutecarpool.entity.CarpoolStatus.OPEN, com.commutecarpool.entity.CarpoolStatus.FULL)")
+    long countActiveCarpoolsByRouteAndDateRange(@Param("routeId") Long routeId,
+                                                @Param("startDate") LocalDate startDate,
+                                                @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(b) FROM Carpool c JOIN CarpoolBooking b ON c.id = b.carpoolId " +
+            "WHERE c.routeId = :routeId AND c.tripDate BETWEEN :startDate AND :endDate " +
+            "AND b.status != com.commutecarpool.entity.BookingStatus.CANCELLED")
+    long countBookingsByRouteAndDateRange(@Param("routeId") Long routeId,
+                                          @Param("startDate") LocalDate startDate,
+                                          @Param("endDate") LocalDate endDate);
 }
