@@ -235,6 +235,9 @@ public class DriverCreditService {
     }
 
     public PageResponse<RestrictionResponse> listRestrictions(String status, String type, int page, int size) {
+        if (!SecurityUtils.isAdmin()) {
+            throw new BusinessException(403, "无权限执行此操作");
+        }
         PageRequest pageable = PageRequest.of(page, size);
         Page<DriverRestriction> restrictionPage;
 
@@ -259,12 +262,18 @@ public class DriverCreditService {
     }
 
     public RestrictionResponse getRestriction(Long id) {
+        if (!SecurityUtils.isAdmin()) {
+            throw new BusinessException(403, "无权限执行此操作");
+        }
         DriverRestriction restriction = restrictionRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "限制记录不存在"));
         return toResponse(restriction);
     }
 
     public List<RestrictionLogResponse> getRestrictionLogs(Long id) {
+        if (!SecurityUtils.isAdmin()) {
+            throw new BusinessException(403, "无权限执行此操作");
+        }
         DriverRestriction restriction = restrictionRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(404, "限制记录不存在"));
         return restriction.getLogs().stream()

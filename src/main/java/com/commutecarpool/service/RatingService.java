@@ -63,7 +63,10 @@ public class RatingService {
 
         try {
             driverCreditService.checkAndApplyRestrictions(req.getRevieweeId());
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
+            throw new BusinessException(500, "信用评估失败：" + e.getMessage());
         }
 
         RatingResponse response = new RatingResponse();
