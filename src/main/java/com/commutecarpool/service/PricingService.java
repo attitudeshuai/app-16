@@ -166,19 +166,9 @@ public class PricingService {
         }
 
         BigDecimal adjustmentRatio = config.getDriverAdjustmentRatio();
-        BigDecimal minAllowed = suggestedPrice
-                .multiply(BigDecimal.ONE.subtract(adjustmentRatio))
-                .setScale(2, RoundingMode.HALF_UP);
-        BigDecimal maxAllowed = suggestedPrice
-                .multiply(BigDecimal.ONE.add(adjustmentRatio))
-                .setScale(2, RoundingMode.HALF_UP);
-
-        if (minAllowed.compareTo(config.getMinPricePerSeat()) < 0) {
-            minAllowed = config.getMinPricePerSeat();
-        }
-        if (maxAllowed.compareTo(config.getMaxPricePerSeat()) > 0) {
-            maxAllowed = config.getMaxPricePerSeat();
-        }
+        BigDecimal[] range = calculateAllowedPriceRange(suggestedPrice, config);
+        BigDecimal minAllowed = range[0];
+        BigDecimal maxAllowed = range[1];
 
         StringBuilder detail = new StringBuilder();
         detail.append("基础价: ").append(basePrice).append("元 (距离:").append(distance).append("km × ")
@@ -220,17 +210,34 @@ public class PricingService {
             return;
         }
         PricingConfig config = getOrCreateDefaultConfig();
-        BigDecimal ratio = config.getDriverAdjustmentRatio();
-        BigDecimal min = suggestedPrice.multiply(BigDecimal.ONE.subtract(ratio));
-        BigDecimal max = suggestedPrice.multiply(BigDecimal.ONE.add(ratio));
+        BigDecimal[] range = calculateAllowedPriceRange(suggestedPrice, config);
+        BigDecimal min = range[0];
+        BigDecimal max = range[1];
 
         if (finalPrice.compareTo(min) < 0 || finalPrice.compareTo(max) > 0) {
-            int percent = ratio.multiply(BigDecimal.valueOf(100)).intValue();
+            int percent = config.getDriverAdjustmentRatio().multiply(BigDecimal.valueOf(100)).intValue();
             throw new BusinessException(400,
-                    "价格超出允许调整范围，只能在建议价±" + percent + "%范围内调整（"
+                    "价格超出允许调整范围，只能在建议价±" + percent + "%范围内调整（已裁剪至系统限价 "
                             + min.setScale(2, RoundingMode.HALF_UP) + " ~ "
                             + max.setScale(2, RoundingMode.HALF_UP) + "元）");
         }
+    }
+
+    private BigDecimal[] calculateAllowedPriceRange(BigDecimal suggestedPrice, PricingConfig config) {
+        BigDecimal ratio = config.getDriverAdjustmentRatio();
+        BigDecimal min = suggestedPrice
+                .multiply(BigDecimal.ONE.subtract(ratio))
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal max = suggestedPrice
+                .multiply(BigDecimal.ONE.add(ratio))
+                .setScale(2, RoundingMode.HALF_UP);
+        if (min.compareTo(config.getMinPricePerSeat()) < 0) {
+            min = config.getMinPricePerSeat();
+        }
+        if (max.compareTo(config.getMaxPricePerSeat()) > 0) {
+            max = config.getMaxPricePerSeat();
+        }
+        return new BigDecimal[] { min, max };
     }
 
     public void ensureCarpoolPricing(Carpool carpool, Route route) {
