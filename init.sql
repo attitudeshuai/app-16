@@ -129,6 +129,42 @@ CREATE TABLE IF NOT EXISTS pricing_temporary_rules (
     INDEX idx_priority (priority)
 );
 
+CREATE TABLE IF NOT EXISTS driver_restrictions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    driver_id BIGINT NOT NULL,
+    restriction_type VARCHAR(255) NOT NULL,
+    status VARCHAR(255) NOT NULL DEFAULT 'ACTIVE',
+    reason VARCHAR(500),
+    start_time DATETIME(6) NOT NULL,
+    end_time DATETIME(6) NOT NULL,
+    appeal_status VARCHAR(255) NOT NULL DEFAULT 'NONE',
+    appeal_material VARCHAR(1000),
+    appeal_reason VARCHAR(500),
+    appeal_submitted_at DATETIME(6),
+    reviewer_id BIGINT,
+    review_remark VARCHAR(500),
+    reviewed_at DATETIME(6),
+    created_at DATETIME(6),
+    updated_at DATETIME(6),
+    INDEX idx_driver_id (driver_id),
+    INDEX idx_status (status),
+    INDEX idx_restriction_type (restriction_type),
+    INDEX idx_driver_status (driver_id, status),
+    INDEX idx_end_time (status, end_time)
+);
+
+CREATE TABLE IF NOT EXISTS driver_restriction_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    restriction_id BIGINT NOT NULL,
+    operator_id BIGINT NOT NULL,
+    old_status VARCHAR(255),
+    new_status VARCHAR(255) NOT NULL,
+    remark VARCHAR(500) NOT NULL,
+    created_at DATETIME(6),
+    INDEX idx_restriction_id (restriction_id),
+    FOREIGN KEY (restriction_id) REFERENCES driver_restrictions(id) ON DELETE CASCADE
+);
+
 INSERT IGNORE INTO users (id, username, email, password_hash, avatar, role, real_name_verified, created_at, updated_at) VALUES
 (1, 'zhangsan', 'zhangsan@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', NULL, 'USER', 1, NOW(), NOW()),
 (2, 'lisi', 'lisi@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', NULL, 'USER', 1, NOW(), NOW()),
@@ -179,3 +215,15 @@ INSERT IGNORE INTO pricing_temporary_rules (id, name, description, start_date, e
 (1, '春节假期加价', '春节假期出行高峰，价格上浮30%', DATE_ADD(CURDATE(), INTERVAL 30 DAY), DATE_ADD(CURDATE(), INTERVAL 37 DAY), NULL, NULL, 1.30, 1, 10, NOW(), NOW()),
 (2, '国庆假期加价', '国庆节期间临时加价25%', DATE_ADD(CURDATE(), INTERVAL 120 DAY), DATE_ADD(CURDATE(), INTERVAL 127 DAY), NULL, NULL, 1.25, 1, 10, NOW(), NOW()),
 (3, '工作日早高峰特惠', '工作日早高峰促销折扣10%', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 60 DAY), '07:00', '08:00', 0.90, 1, 5, NOW(), NOW());
+
+INSERT IGNORE INTO driver_restrictions (id, driver_id, restriction_type, status, reason, start_time, end_time, appeal_status, appeal_material, appeal_reason, appeal_submitted_at, reviewer_id, review_remark, reviewed_at, created_at, updated_at) VALUES
+(1, 3, 'TOO_MANY_COMPLAINTS', 'ACTIVE', '近一个月内收到4次有效投诉（评分≤2），超过阈值3次', NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), 'PENDING', '/uploads/appeal_evidence_1.pdf', '已有改善，请求解除限制', NOW(), NULL, NULL, NULL, NOW(), NOW()),
+(2, 4, 'NO_SHOW', 'EXPIRED', '近一个月内出现1次爽约行为', DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY), 'REJECTED', NULL, '当时有紧急情况', DATE_SUB(NOW(), INTERVAL 9 DAY), 9, '证据不充分，驳回申诉', DATE_SUB(NOW(), INTERVAL 8 DAY), NOW(), NOW());
+
+INSERT IGNORE INTO driver_restriction_logs (id, restriction_id, operator_id, old_status, new_status, remark, created_at) VALUES
+(1, 1, 3, NULL, 'ACTIVE', '近一个月内收到4次有效投诉（评分≤2），超过阈值3次', NOW()),
+(2, 1, 3, 'ACTIVE', 'ACTIVE', '司机提交申诉：已有改善，请求解除限制', NOW()),
+(3, 2, 4, NULL, 'ACTIVE', '近一个月内出现1次爽约行为', DATE_SUB(NOW(), INTERVAL 10 DAY)),
+(4, 2, 4, 'ACTIVE', 'ACTIVE', '司机提交申诉：当时有紧急情况', DATE_SUB(NOW(), INTERVAL 9 DAY)),
+(5, 2, 9, 'ACTIVE', 'EXPIRED', '管理员驳回申诉：证据不充分，驳回申诉', DATE_SUB(NOW(), INTERVAL 8 DAY)),
+(6, 2, 0, 'ACTIVE', 'EXPIRED', '限制期限到期，自动解除', DATE_SUB(NOW(), INTERVAL 3 DAY));

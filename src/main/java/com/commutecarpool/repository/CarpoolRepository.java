@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CarpoolRepository extends JpaRepository<Carpool, Long> {
@@ -42,4 +43,7 @@ public interface CarpoolRepository extends JpaRepository<Carpool, Long> {
     long countBookingsByRouteAndDateRange(@Param("routeId") Long routeId,
                                           @Param("startDate") LocalDate startDate,
                                           @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT COUNT(c) FROM Carpool c WHERE c.driverId = :driverId AND c.status = 'CANCELLED' AND c.createdAt >= :since")
+    long countNoShowByDriverIdSince(@Param("driverId") Long driverId, @Param("since") LocalDateTime since);
 }

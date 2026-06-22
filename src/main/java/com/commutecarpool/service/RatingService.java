@@ -25,6 +25,7 @@ public class RatingService {
 
     private final CarpoolRatingRepository carpoolRatingRepository;
     private final CarpoolRepository carpoolRepository;
+    private final DriverCreditService driverCreditService;
 
     public PageResponse<RatingResponse> listRatings(Long carpoolId, Long reviewerId, Long revieweeId, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
@@ -59,6 +60,12 @@ public class RatingService {
         BeanUtils.copyProperties(req, rating);
         rating.setReviewerId(SecurityUtils.getCurrentUserId());
         carpoolRatingRepository.save(rating);
+
+        try {
+            driverCreditService.checkAndApplyRestrictions(req.getRevieweeId());
+        } catch (Exception e) {
+        }
+
         RatingResponse response = new RatingResponse();
         BeanUtils.copyProperties(rating, response);
         return response;

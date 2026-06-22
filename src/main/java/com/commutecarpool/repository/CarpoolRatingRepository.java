@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CarpoolRatingRepository extends JpaRepository<CarpoolRating, Long> {
@@ -22,6 +23,9 @@ public interface CarpoolRatingRepository extends JpaRepository<CarpoolRating, Lo
     @Query("SELECT AVG(r.rating) FROM CarpoolRating r WHERE r.revieweeId = :revieweeId")
     Double getAverageRatingForUser(@Param("revieweeId") Long revieweeId);
 
+    @Query("SELECT AVG(r.rating) FROM CarpoolRating r WHERE r.revieweeId = :revieweeId AND r.createdAt >= :since")
+    Double getAverageRatingForUserSince(@Param("revieweeId") Long revieweeId, @Param("since") LocalDateTime since);
+
     Page<CarpoolRating> findByCarpoolIdAndReviewerId(Long carpoolId, Long reviewerId, Pageable pageable);
 
     Page<CarpoolRating> findByCarpoolIdAndRevieweeId(Long carpoolId, Long revieweeId, Pageable pageable);
@@ -29,4 +33,6 @@ public interface CarpoolRatingRepository extends JpaRepository<CarpoolRating, Lo
     Page<CarpoolRating> findByReviewerIdAndRevieweeId(Long reviewerId, Long revieweeId, Pageable pageable);
 
     Page<CarpoolRating> findByCarpoolIdAndReviewerIdAndRevieweeId(Long carpoolId, Long reviewerId, Long revieweeId, Pageable pageable);
+
+    List<CarpoolRating> findByRevieweeIdAndCreatedAtAfter(Long revieweeId, LocalDateTime since);
 }

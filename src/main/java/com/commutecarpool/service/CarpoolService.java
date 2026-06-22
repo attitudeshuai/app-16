@@ -34,6 +34,7 @@ public class CarpoolService {
     private final RouteRepository routeRepository;
     private final DriverVerificationRepository verificationRepository;
     private final PricingService pricingService;
+    private final DriverCreditService driverCreditService;
 
     public PageResponse<CarpoolResponse> listCarpools(CarpoolStatus status, LocalDate startDate, LocalDate endDate, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
@@ -66,6 +67,9 @@ public class CarpoolService {
         }
         if (!verificationRepository.isDriverVerified(req.getDriverId())) {
             throw new BusinessException(403, "请先完成实名认证后再创建行程");
+        }
+        if (driverCreditService.isDriverRestricted(req.getDriverId())) {
+            throw new BusinessException(403, "您当前处于信用限制期，无法创建新行程");
         }
         Carpool carpool = new Carpool();
         BeanUtils.copyProperties(req, carpool);

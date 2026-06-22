@@ -21,6 +21,7 @@ public class RouteService {
 
     private final RouteRepository routeRepository;
     private final DriverVerificationRepository verificationRepository;
+    private final DriverCreditService driverCreditService;
 
     public PageResponse<RouteResponse> listRoutes(String search, Boolean activeOnly, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
@@ -41,6 +42,9 @@ public class RouteService {
         Long userId = SecurityUtils.getCurrentUserId();
         if (!verificationRepository.isDriverVerified(userId)) {
             throw new BusinessException(403, "请先完成实名认证后再发布路线");
+        }
+        if (driverCreditService.isDriverRestricted(userId)) {
+            throw new BusinessException(403, "您当前处于信用限制期，无法发布新路线");
         }
         Route route = new Route();
         BeanUtils.copyProperties(req, route);
