@@ -30,9 +30,11 @@ public class ReminderSmsService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void sendTripReminderSms() {
-        List<CarpoolBooking> bookings = carpoolBookingRepository.findBookingsPendingReminder();
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime twoHoursLater = now.plusHours(2);
+        LocalDateTime targetTime = LocalDateTime.now().plusHours(2);
+        LocalDateTime windowStart = targetTime.minusSeconds(30);
+        LocalDateTime windowEnd = targetTime.plusSeconds(30);
+
+        List<CarpoolBooking> bookings = carpoolBookingRepository.findBookingsForReminder(windowStart, windowEnd);
 
         for (CarpoolBooking booking : bookings) {
             try {
@@ -48,26 +50,20 @@ public class ReminderSmsService {
                 if (tripDateTime == null) {
                     continue;
                 }
-                if (!tripDateTime.isBefore(twoHoursLater) && !tripDateTime.isAfter(twoHoursLater)) {
-                }
-                if (tripDateTime.isAfter(now) && !tripDateTime.isAfter(twoHoursLater)) {
-                    if (booking.getEmergencyContactPhone() != null && booking.getEmergencyContactName() != null) {
-                        doSendSms(
-                                booking.getEmergencyContactPhone(),
-                                booking.getEmergencyContactName(),
-                                booking.getEmergencyContactRelationship(),
-                                route.getStartLocation(),
-                                route.getEndLocation(),
-                                tripDateTime
-                        );
-                        booking.setReminderSmsSent(true);
-                        carpoolBookingRepository.save(booking);
-                        log.info("已向紧急联系人 {}({}) 发送行程提醒短信，预订ID: {}",
-                                booking.getEmergencyContactName(),
-                                booking.getEmergencyContactPhone(),
-                                booking.getId());
-                    }
-                }
+                doSendSms(
+                        booking.getEmergencyContactPhone(),
+                        booking.getEmergencyContactName(),
+                        booking.getEmergencyContactRelationship(),
+                        route.getStartLocation(),
+                        route.getEndLocation(),
+                        tripDateTime
+                );
+                booking.setReminderSmsSent(true);
+                carpoolBookingRepository.save(booking);
+                log.info("已向紧急联系人 {}({}) 发送行程提醒短信，预订ID: {}",
+                        booking.getEmergencyContactName(),
+                        booking.getEmergencyContactPhone(),
+                        booking.getId());
             } catch (Exception e) {
                 log.error("发送行程提醒短信失败，预订ID: {}", booking.getId(), e);
             }
