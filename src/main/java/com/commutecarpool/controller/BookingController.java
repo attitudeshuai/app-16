@@ -5,6 +5,7 @@ import com.commutecarpool.dto.PageResponse;
 import com.commutecarpool.dto.booking.BookingRequest;
 import com.commutecarpool.dto.booking.BookingResponse;
 import com.commutecarpool.dto.booking.BookingStatusRequest;
+import com.commutecarpool.dto.emergencycontact.EmergencyContactResponse;
 import com.commutecarpool.entity.BookingStatus;
 import com.commutecarpool.service.BookingService;
 import jakarta.validation.Valid;
@@ -62,5 +63,10 @@ public class BookingController {
     @PatchMapping("/{id}/status")
     public ApiResponse<BookingResponse> updateStatus(@PathVariable Long id, @RequestBody @Valid BookingStatusRequest request) {
         return ApiResponse.success(bookingService.updateBookingStatus(id, request));
+    }
+
+    @GetMapping("/{id}/emergency-contact")
+    public ApiResponse<EmergencyContactResponse> getPassengerEmergencyContact(@PathVariable Long id) {
+        return ApiResponse.success(bookingService.getPassengerEmergencyContactForDriver(id));
     }
 }

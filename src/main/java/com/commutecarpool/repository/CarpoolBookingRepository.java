@@ -5,6 +5,8 @@ import com.commutecarpool.entity.CarpoolBooking;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,4 +32,14 @@ public interface CarpoolBookingRepository extends JpaRepository<CarpoolBooking, 
     Page<CarpoolBooking> findByCarpoolIdAndPassengerIdAndStatus(Long carpoolId, Long passengerId, BookingStatus status, Pageable pageable);
 
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT cb FROM CarpoolBooking cb JOIN Carpool c ON cb.carpoolId = c.id " +
+            "WHERE cb.id = :bookingId AND c.driverId = :driverId")
+    CarpoolBooking findByIdAndDriverId(@Param("bookingId") Long bookingId, @Param("driverId") Long driverId);
+
+    @Query("SELECT cb FROM CarpoolBooking cb JOIN Carpool c ON cb.carpoolId = c.id " +
+            "WHERE cb.status IN ('PENDING', 'CONFIRMED') " +
+            "AND cb.reminderSmsSent = false " +
+            "AND c.tripDate IS NOT NULL")
+    List<CarpoolBooking> findBookingsPendingReminder();
 }

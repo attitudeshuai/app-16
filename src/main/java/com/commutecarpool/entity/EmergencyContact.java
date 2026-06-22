@@ -2,12 +2,11 @@ package com.commutecarpool.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,43 +18,39 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "carpool_bookings")
-public class CarpoolBooking {
+@Table(name = "emergency_contacts")
+public class EmergencyContact {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "carpool_id")
-    private Long carpoolId;
-
     @Column(nullable = false, name = "passenger_id")
     private Long passengerId;
 
-    @Column(nullable = false, name = "seats_booked")
-    private Integer seatsBooked;
+    @Column(nullable = false, name = "contact_name")
+    private String contactName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private BookingStatus status = BookingStatus.PENDING;
+    @Column(nullable = false, name = "contact_phone")
+    private String contactPhone;
 
-    @Column(name = "emergency_contact_name")
-    private String emergencyContactName;
-
-    @Column(name = "emergency_contact_phone")
-    private String emergencyContactPhone;
-
-    @Column(name = "emergency_contact_relationship")
-    private String emergencyContactRelationship;
-
-    @Column(name = "reminder_sms_sent", nullable = false)
-    private Boolean reminderSmsSent = false;
+    @Column(nullable = false, name = "relationship")
+    private String relationship;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     private void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    private void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

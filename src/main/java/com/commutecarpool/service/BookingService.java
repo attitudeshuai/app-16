@@ -4,13 +4,16 @@ import com.commutecarpool.dto.PageResponse;
 import com.commutecarpool.dto.booking.BookingRequest;
 import com.commutecarpool.dto.booking.BookingResponse;
 import com.commutecarpool.dto.booking.BookingStatusRequest;
+import com.commutecarpool.dto.emergencycontact.EmergencyContactResponse;
 import com.commutecarpool.entity.BookingStatus;
 import com.commutecarpool.entity.Carpool;
 import com.commutecarpool.entity.CarpoolBooking;
 import com.commutecarpool.entity.CarpoolStatus;
+import com.commutecarpool.entity.EmergencyContact;
 import com.commutecarpool.exception.BusinessException;
 import com.commutecarpool.repository.CarpoolBookingRepository;
 import com.commutecarpool.repository.CarpoolRepository;
+import com.commutecarpool.repository.EmergencyContactRepository;
 import com.commutecarpool.security.SecurityUtils;
 import com.commutecarpool.util.PageUtils;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ public class BookingService {
 
     private final CarpoolBookingRepository carpoolBookingRepository;
     private final CarpoolRepository carpoolRepository;
+    private final EmergencyContactRepository emergencyContactRepository;
 
     public PageResponse<BookingResponse> listBookings(Long carpoolId, Long passengerId, BookingStatus status, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
@@ -65,10 +69,19 @@ public class BookingService {
         if (carpool.getAvailableSeats() < req.getSeatsBooked()) {
             throw new BusinessException(400, "座位不足");
         }
+        Long passengerId = SecurityUtils.getCurrentUserId();
+        List<EmergencyContact> contacts = emergencyContactRepository.findByPassengerId(passengerId);
+        if (contacts.isEmpty()) {
+            throw new BusinessException(400, "首次提交预约前请先添加至少一位紧急联系人");
+        }
+        EmergencyContact primaryContact = contacts.get(0);
         CarpoolBooking booking = new CarpoolBooking();
         booking.setCarpoolId(req.getCarpoolId());
-        booking.setPassengerId(SecurityUtils.getCurrentUserId());
+        booking.setPassengerId(passengerId);
         booking.setSeatsBooked(req.getSeatsBooked());
+        booking.setEmergencyContactName(primaryContact.getContactName());
+        booking.setEmergencyContactPhone(primaryContact.getContactPhone());
+        booking.setEmergencyContactRelationship(primaryContact.getRelationship());
         carpoolBookingRepository.save(booking);
         return toResponse(booking);
     }
@@ -131,6 +144,22 @@ public class BookingService {
         booking.setStatus(newStatus);
         carpoolBookingRepository.save(booking);
         return toResponse(booking);
+    }
+
+    public EmergencyContactResponse getPassengerEmergencyContactForDriver(Long bookingId) {
+        Long driverId = SecurityUtils.getCurrentUserId();
+        CarpoolBooking booking = carpoolBookingRepository.findByIdAndDriverId(bookingId, driverId);
+        if (booking == null) {
+            throw new BusinessException(404, "预订不存在或您无权查看");
+        }
+        if (booking.getEmergencyContactName() == null || booking.getEmergencyContactPhone() == null) {
+            throw new BusinessException(404, "该乘客未设置紧急联系人信息");
+        }
+        EmergencyContactResponse response = new EmergencyContactResponse();
+        response.setContactName(booking.getEmergencyContactName());
+        response.setContactPhone(booking.getEmergencyContactPhone());
+        response.setRelationship(booking.getEmergencyContactRelationship());
+        return response;
     }
 
     private BookingResponse toResponse(CarpoolBooking booking) {

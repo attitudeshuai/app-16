@@ -16,5 +16,9 @@ public class BookingResponse {
     private Long passengerId;
     private Integer seatsBooked;
     private String status;
+    private String emergencyContactName;
+    private String emergencyContactPhone;
+    private String emergencyContactRelationship;
+    private Boolean reminderSmsSent;
     private LocalDateTime createdAt;
 }

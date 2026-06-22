@@ -80,7 +80,22 @@ CREATE TABLE IF NOT EXISTS carpool_bookings (
     passenger_id BIGINT NOT NULL,
     seats_booked INTEGER NOT NULL,
     status VARCHAR(255) NOT NULL DEFAULT 'PENDING',
+    emergency_contact_name VARCHAR(50),
+    emergency_contact_phone VARCHAR(20),
+    emergency_contact_relationship VARCHAR(20),
+    reminder_sms_sent BIT(1) NOT NULL DEFAULT 0,
     created_at DATETIME(6)
+);
+
+CREATE TABLE IF NOT EXISTS emergency_contacts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    passenger_id BIGINT NOT NULL,
+    contact_name VARCHAR(50) NOT NULL,
+    contact_phone VARCHAR(20) NOT NULL,
+    relationship VARCHAR(20) NOT NULL,
+    created_at DATETIME(6),
+    updated_at DATETIME(6),
+    INDEX idx_passenger_id (passenger_id)
 );
 
 CREATE TABLE IF NOT EXISTS carpool_ratings (
