@@ -27,12 +27,18 @@ public class ReminderSmsService {
     private final CarpoolRepository carpoolRepository;
     private final RouteRepository routeRepository;
 
+    private volatile LocalDateTime lastExecutionTime;
+
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void sendTripReminderSms() {
-        LocalDateTime targetTime = LocalDateTime.now().plusHours(2);
-        LocalDateTime windowStart = targetTime.minusSeconds(30);
-        LocalDateTime windowEnd = targetTime.plusSeconds(30);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime previous = lastExecutionTime != null ? lastExecutionTime : now.minusSeconds(60);
+
+        LocalDateTime windowStart = previous.plusHours(2);
+        LocalDateTime windowEnd = now.plusHours(2);
+
+        lastExecutionTime = now;
 
         List<CarpoolBooking> bookings = carpoolBookingRepository.findBookingsForReminder(windowStart, windowEnd);
 
